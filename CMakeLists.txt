@@ -28,9 +28,9 @@ else()
 	endif()
 endif()
 
-add_library(tray SHARED ${SRCS})
+add_library(tray STATIC ${SRCS})
 set_property(TARGET tray PROPERTY C_STANDARD 99)
-target_compile_definitions(tray PRIVATE TRAY_EXPORTS)
+target_include_directories(tray SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(tray PROPERTIES C_VISIBILITY_PRESET hidden)
 
 if(WIN32)
