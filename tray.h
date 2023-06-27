@@ -6,19 +6,7 @@ extern "C"
 {
 #endif
 
-#if WIN32
-#ifdef TRAY_EXPORTS
-#define TRAY_EXPORT __declspec(dllexport)
-#else
-#define TRAY_EXPORT __declspec(dllimport)
-#endif
-#else
-#if __GNUC__ >= 4 || defined(__clang__)
-#define TRAY_EXPORT __attribute__((visibility("default")))
-#else
-#define TRAY_EXPORT
-#endif
-#endif
+#define TRAY_EXPORT 
 
 struct tray {
   const char *icon_name;
