@@ -83,7 +83,8 @@ int tray_loop(int blocking) {
 void tray_update(struct tray *tray) {
     tray_instance = tray;
     double iconHeight = [[NSStatusBar systemStatusBar] thickness];
-    NSImage *image = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:tray_instance->icon_name]];
+    NSImage *image = [NSImage imageNamed:[NSString stringWithUTF8String:tray_instance->icon_name]];
+    if (image == nil) image = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:tray_instance->icon_name]];
     double width = image.size.width * (iconHeight / image.size.height);
     [image setSize:NSMakeSize(width, iconHeight)];
     statusItem.button.image = image;
