@@ -1,17 +1,22 @@
 #include <stdio.h>
 #include <string.h>
+#if defined(__clang__)
+#include <libc.h>
+#else
+#include <unistd.h>
+#endif
 
 #if defined (_WIN32) || defined (_WIN64)
 #define TRAY_WINAPI 1
 #elif defined (__linux__) || defined (linux) || defined (__linux)
-#define TRAY_APPINDICATOR 1
+#define TRAY_QT 1
 #elif defined (__APPLE__) || defined (__MACH__)
 #define TRAY_APPKIT 1
 #endif
 
 #include "tray.h"
 
-#if TRAY_APPINDICATOR
+#if TRAY_QT
 #define TRAY_ICON1 "icon-24px.png"
 #define TRAY_ICON2 "icon2-24px.png"
 #elif TRAY_APPKIT
@@ -23,35 +28,36 @@
 #endif
 
 void window_cb() {
-  printf("window cb\n");
+  printf("window cb: this is where you would make a window visible.\n");
 }
 
-void toggle_cb(struct tray_menu *item) {
+void toggle_cb(struct tray_menu_item *item) {
   printf("toggle cb\n");
   item->checked = !item->checked;
-
-  tray_update(tray_get_instance());
+  struct tray* tray = tray_get_instance();
+  if (tray != NULL) tray_update(tray);
 }
 
-void hello_cb(struct tray_menu *item) {
+void hello_cb(struct tray_menu_item *item) {
   (void)item;
-  printf("hello cb\n");
+  printf("hello cb: changing icon\n");
   struct tray* tray = tray_get_instance();
-  if (strcmp(tray->icon_name, TRAY_ICON1) == 0) {
-    tray->icon_name = TRAY_ICON2;
+  if (tray == NULL) return;
+  if (strcmp(tray->icon_filepath, TRAY_ICON1) == 0) {
+    tray->icon_filepath = TRAY_ICON2;
   } else {
-    tray->icon_name = TRAY_ICON1;
+    tray->icon_filepath = TRAY_ICON1;
   }
   tray_update(tray);
 }
 
-void quit_cb(struct tray_menu *item) {
+void quit_cb(struct tray_menu_item *item) {
   (void)item;
   printf("quit cb\n");
   tray_exit();
 }
 
-void submenu_cb(struct tray_menu *item) {
+void submenu_cb(struct tray_menu_item *item) {
   (void)item;
   printf("submenu: clicked on %s\n", item->text);
 //  tray_update(tray_get_instance());
@@ -59,32 +65,32 @@ void submenu_cb(struct tray_menu *item) {
 
 // Test tray init
 struct tray tray = {
-    .icon_name = TRAY_ICON1,
+    .icon_filepath = TRAY_ICON1,
     .tooltip = "Tray",
     .cb = window_cb,
     .menu =
-        (struct tray_menu[]) {
+        (struct tray_menu_item[]) {
             {.text = "Change Icon", .cb = hello_cb},
             {.text = "Checked", .checked = 1, .cb = toggle_cb},
             {.text = "Disabled", .disabled = 1},
             {.text = "-"},
             {.text = "SubMenu",
              .submenu =
-                 (struct tray_menu[]) {
+             (struct tray_menu_item[]) {
                      {.text = "FIRST", .checked = 1, .cb = submenu_cb},
                      {.text = "SECOND",
                       .submenu =
-                          (struct tray_menu[]) {
+                          (struct tray_menu_item[]) {
                               {.text = "THIRD",
                                .submenu =
-                                   (struct tray_menu[]) {
+                                   (struct tray_menu_item[]) {
                                        {.text = "7", .cb = submenu_cb},
                                        {.text = "-"},
                                        {.text = "8", .cb = submenu_cb},
                                        {.text = NULL}}},
                               {.text = "FOUR",
                                .submenu =
-                                   (struct tray_menu[]) {
+                                   (struct tray_menu_item[]) {
                                        {.text = "5", .cb = submenu_cb},
                                        {.text = "6", .cb = submenu_cb},
                                        {.text = NULL}}},
@@ -100,7 +106,9 @@ int main(int argc, char **argv) {
     printf("failed to create tray\n");
     return 1;
   }
-  while (tray_loop(1) == 0) {
+  int blocking = 0;
+  while (tray_loop(blocking) == 0) {
+    if (!blocking) usleep(100000);
     printf("iteration\n");
   }
   return 0;

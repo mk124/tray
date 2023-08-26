@@ -9,18 +9,18 @@ extern "C"
 #define TRAY_EXPORT 
 
 struct tray {
-  const char *icon_name;
+  const char *icon_filepath;
   char *tooltip;
   void (*cb)(struct tray *); // called on left click, leave null to just open menu
-  struct tray_menu *menu;
+  struct tray_menu_item *menu;
 };
 
-struct tray_menu {
+struct tray_menu_item {
   const char *text;
   int disabled;
   int checked;
-  void (*cb)(struct tray_menu *);
-  struct tray_menu *submenu;
+  void (*cb)(struct tray_menu_item *);
+  struct tray_menu_item *submenu;
 };
 
 TRAY_EXPORT
